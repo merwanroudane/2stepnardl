@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twostep-nardl"
+version = "3.0.0"
+authors = [
+    {name = "Merwan Roudane", email = "merwanroudane920@gmail.com"}
+]
+description = "Two-step Nonlinear ARDL (NARDL) estimation with FM-OLS long-run and OLS short-run dynamics"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=1.5",
+    "scipy>=1.10",
+    "statsmodels>=0.14",
+    "matplotlib>=3.7",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = [
+    "NARDL", "nonlinear ARDL", "cointegration", "asymmetry",
+    "bounds test", "FM-OLS", "econometrics", "time series",
+    "error correction", "dynamic multipliers",
+]
+
+[project.urls]
+"Homepage"    = "https://github.com/merwan-roudane/twostep-nardl"
+"Bug Tracker" = "https://github.com/merwan-roudane/twostep-nardl/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov", "build", "twine"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["twostep_nardl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
