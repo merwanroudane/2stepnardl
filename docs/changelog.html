@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Changelog — twostep-nardl</title>
+  <meta name="description" content="Version history and changelog for twostep-nardl Python package."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quickstart.html">Quick Start</a></li>
+      <li><a href="api.html">API</a></li>
+      <li><a href="example.html">Example</a></li>
+      <li><a href="changelog.html" class="active">Changelog</a></li>
+      <li><a href="https://pypi.org/project/twostep-nardl/" class="btn-pypi" target="_blank">PyPI</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </div>
+</nav>
+
+<div style="height:var(--nav-h)"></div>
+
+<section class="section" style="padding-top:56px">
+  <div class="container" style="max-width:820px">
+    <div class="section-header">
+      <div class="section-tag">Release History</div>
+      <h1 class="section-title">Changelog</h1>
+      <p class="section-subtitle">All notable changes to <code>twostep-nardl</code>. Follows <a href="https://semver.org/" target="_blank">Semantic Versioning</a>.</p>
+    </div>
+
+    <!-- v3.0.0 -->
+    <div class="changelog-item">
+      <div class="changelog-version">
+        <span class="version-badge">v3.0.0</span>
+        <span class="version-date">April 2026</span>
+        <span class="version-current">Latest</span>
+      </div>
+      <div class="changelog-changes">
+        <div class="change-item"><span class="change-tag new">new</span>Full Python port of Stata twostep_nardl v3.0.0 — complete numerical parity with Stata implementation.</div>
+        <div class="change-item"><span class="change-tag new">new</span><strong>TwoStepNARDL</strong> class with both <code>method='twostep'</code> (FM-OLS + OLS ECM) and <code>method='onestep'</code> (single OLS).</div>
+        <div class="change-item"><span class="change-tag new">new</span>FM-OLS estimator with Andrews-Monahan non-parametric HAC correction and automatic bandwidth (floor(T^0.25)).</div>
+        <div class="change-item"><span class="change-tag new">new</span>FM-TOLS estimator for multiple asymmetric regressors (k &gt; 1).</div>
+        <div class="change-item"><span class="change-tag new">new</span>AIC/BIC grid search lag selection with partial automation (mix of fixed and auto lags).</div>
+        <div class="change-item"><span class="change-tag new">new</span>PSS (2001) bounds test — complete critical value tables for all 5 cases, k=0…10, F and t statistics.</div>
+        <div class="change-item"><span class="change-tag new">new</span>Wald tests for long-run, short-run additive, and short-run impact asymmetry.</div>
+        <div class="change-item"><span class="change-tag new">new</span>Cumulative dynamic multipliers (<code>multipliers()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Half-life and persistence profile of ECM (<code>half_life()</code>): closed-form formula and Pesaran &amp; Shin (1996) PP(h).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Period-by-period impulse response functions (<code>irf()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Asymmetric adjustment speed analysis (<code>asymadj()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Residual diagnostics: Breusch-Godfrey, White, Jarque-Bera, RESET (<code>diagnostics()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Publication-quality ECM table in CGS (2019) Table 9 format (<code>ecm_table()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Prediction and fitted values (<code>predict()</code>): xb, residuals, ECT series.</div>
+        <div class="change-item"><span class="change-tag new">new</span>CUSUM structural stability plot (<code>plot_cusum()</code>).</div>
+        <div class="change-item"><span class="change-tag new">new</span>Partial sum decomposition with optional dead-band threshold support.</div>
+        <div class="change-item"><span class="change-tag new">new</span>HC-robust VCE for all short-run parameters.</div>
+        <div class="change-item"><span class="change-tag new">new</span>Complete oil price → CPI example notebook with FRED data download and 15 sections.</div>
+        <div class="change-item"><span class="change-tag new">new</span>Full GitHub Pages documentation site with API reference, worked example, and gallery.</div>
+        <div class="change-item"><span class="change-tag new">new</span>Published to PyPI: <code>pip install twostep-nardl</code>.</div>
+      </div>
+    </div>
+
+    <!-- Stata v3.0.0 reference -->
+    <div class="changelog-item" style="opacity:.7">
+      <div class="changelog-version">
+        <span class="version-badge" style="background:#374151">Stata v3.0.0</span>
+        <span class="version-date">2023 (original)</span>
+      </div>
+      <div class="changelog-changes">
+        <div class="change-item"><span class="change-tag change">ref</span>Original Stata implementation by Merwan Roudane. This Python package is a faithful port of all numerical routines.</div>
+        <div class="change-item"><span class="change-tag change">ref</span>Stata commands: <code>twostep_nardl</code>, <code>twostep_nardl_estat</code>, <code>twostep_nardl_plot</code>.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+        <p>Two-Step Nonlinear ARDL estimation for Python. MIT Licensed.</p>
+        <p>Author: <a href="mailto:merwanroudane920@gmail.com">Merwan Roudane</a></p>
+      </div>
+      <div class="footer-links">
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="api.html">API Reference</a></li>
+          <li><a href="example.html">Full Example</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="https://pypi.org/project/twostep-nardl/" target="_blank">PyPI</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024–2026 Merwan Roudane · MIT License</span>
+      <span>twostep-nardl v3.0.0</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+</body>
+</html>

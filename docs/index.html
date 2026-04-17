@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>twostep-nardl | Two-Step NARDL in Python</title>
+  <meta name="description" content="twostep-nardl: Python library for two-step Nonlinear ARDL (NARDL) estimation with FM-OLS, bounds testing, dynamic multipliers, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="brand-icon">⟮N⟯</span>
+      <span>twostep-nardl</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="quickstart.html">Quick Start</a></li>
+      <li><a href="api.html">API</a></li>
+      <li><a href="example.html">Example</a></li>
+      <li><a href="changelog.html">Changelog</a></li>
+      <li>
+        <a href="https://pypi.org/project/twostep-nardl/" class="btn-pypi" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          PyPI
+        </a>
+      </li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <canvas id="waveCanvas"></canvas>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span>📦 v3.0.0 on PyPI</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="gradient-text">Two-Step NARDL</span><br/>
+      for Python
+    </h1>
+    <p class="hero-subtitle">
+      Faithful Python port of the Stata <code>twostep_nardl</code> package by Merwan Roudane.<br/>
+      Full FM-OLS / FM-TOLS long-run estimation · PSS bounds test · dynamic multipliers · publication-quality output.
+    </p>
+    <div class="hero-actions">
+      <a href="quickstart.html" class="btn-primary">Get Started →</a>
+      <a href="example.html" class="btn-secondary">View Example</a>
+      <a href="https://github.com/merwanroudane/2stepnardl" class="btn-ghost" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <div class="hero-badges">
+      <img src="https://img.shields.io/pypi/v/twostep-nardl?style=flat-square&color=6366f1&labelColor=1e1e3f" alt="PyPI version"/>
+      <img src="https://img.shields.io/pypi/pyversions/twostep-nardl?style=flat-square&color=06b6d4&labelColor=1e1e3f" alt="Python"/>
+      <img src="https://img.shields.io/pypi/l/twostep-nardl?style=flat-square&color=10b981&labelColor=1e1e3f" alt="MIT License"/>
+      <img src="https://img.shields.io/pypi/dm/twostep-nardl?style=flat-square&color=f59e0b&labelColor=1e1e3f" alt="Downloads"/>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>Scroll to explore</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</header>
+
+<!-- ═══════════════════ INSTALL BANNER ═══════════════════ -->
+<section class="install-section">
+  <div class="container">
+    <div class="install-card">
+      <span class="install-label">Install via pip</span>
+      <div class="install-cmd">
+        <code>pip install twostep-nardl</code>
+        <button class="copy-btn" data-copy="pip install twostep-nardl" title="Copy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>
+      <span class="install-or">or</span>
+      <a class="install-link" href="https://pypi.org/project/twostep-nardl/" target="_blank">View on PyPI →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="section features-section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Features</div>
+      <h2 class="section-title">Everything you need for NARDL analysis</h2>
+      <p class="section-subtitle">A complete, production-ready implementation of the CGS (2019) and SYG (2014) frameworks.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#6366f1,#818cf8)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Two-Step Estimation</h3>
+        <p>FM-OLS / FM-TOLS long-run equation + OLS ECM short-run dynamics, exactly replicating Cho, Greenwood-Nimmo &amp; Shin (2019).</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3>PSS Bounds Test</h3>
+        <p>Complete critical value tables for all 5 PSS deterministic cases and k = 0…10 regressors, with automatic decision rules.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#10b981,#34d399)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+        </div>
+        <h3>Wald Asymmetry Tests</h3>
+        <p>Automatic Wald tests for long-run, short-run additive, and short-run impact asymmetry with χ² statistics.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2 L2 22 L22 22 Z"/></svg>
+        </div>
+        <h3>Dynamic Multipliers</h3>
+        <p>Cumulative dynamic multipliers for positive and negative shocks, with asymmetry profile and LR convergence.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#ec4899,#f472b6)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Lag Selection</h3>
+        <p>AIC/BIC grid search with full or partial automation: leave any lag as <code>None</code> and it will be selected optimally.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        </div>
+        <h3>Publication Charts</h3>
+        <p>Matplotlib-based charts: multiplier plots, CUSUM stability, IRFs, persistence profiles, and residual diagnostics.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#06b6d4,#22d3ee)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h3>Pandas Native</h3>
+        <p>Works directly on DataFrames with DatetimeIndex for natural time-series workflows. Results are ported as attributes.</p>
+      </div>
+      <div class="feature-card" data-aos>
+        <div class="feature-icon" style="background:linear-gradient(135deg,#f97316,#fb923c)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Stata-Faithful Port</h3>
+        <p>Numerically validated against the original Stata v3.0.0 package. All HAC, FM-OLS, and CUSUM computations match.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ DASHBOARD FIGURE ═══════════════════ -->
+<section class="section dashboard-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Example Output</div>
+      <h2 class="section-title">Oil Price Asymmetry Pass-Through to US CPI</h2>
+      <p class="section-subtitle">WTI crude oil → US CPI, monthly 1990–2024 (FRED data). Two-Step FM-OLS estimation.</p>
+    </div>
+    <div class="dashboard-frame">
+      <div class="dashboard-bar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="dashboard-title-bar">Results Dashboard — twostep-nardl</span>
+      </div>
+      <img src="figures/fig12_dashboard.png" alt="NARDL Results Dashboard" class="dashboard-img" loading="lazy" />
+    </div>
+    <div class="dashboard-caption">
+      Full results dashboard: raw data, partial sums, dynamic multipliers, asymmetry profile, bounds test, Wald statistics, and persistence profile.
+      <a href="example.html">Explore the full worked example →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ QUICK CODE ═══════════════════ -->
+<section class="section code-section" id="quickcode">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Quick Start</div>
+      <h2 class="section-title">From data to results in minutes</h2>
+    </div>
+    <div class="code-showcase">
+      <div class="code-tabs">
+        <button class="tab active" data-tab="tab-estimate">Estimate</button>
+        <button class="tab" data-tab="tab-bounds">Bounds Test</button>
+        <button class="tab" data-tab="tab-mult">Multipliers</button>
+        <button class="tab" data-tab="tab-diag">Diagnostics</button>
+      </div>
+      <div class="code-panels">
+        <div class="code-panel active" id="tab-estimate">
+<pre><code><span class="kw">from</span> twostep_nardl <span class="kw">import</span> TwoStepNARDL
+
+<span class="com"># Estimate Two-Step NARDL with FM-OLS long-run step</span>
+model <span class="op">=</span> TwoStepNARDL(
+    data      <span class="op">=</span> df,           <span class="com"># pd.DataFrame with DatetimeIndex</span>
+    depvar    <span class="op">=</span> <span class="str">'lcpi'</span>,      <span class="com"># dependent variable</span>
+    xvars     <span class="op">=</span> [<span class="str">'loil'</span>],    <span class="com"># regressors</span>
+    decompose <span class="op">=</span> [<span class="str">'loil'</span>],    <span class="com"># asymmetric decomposition</span>
+    lags      <span class="op">=</span> <span class="kw">None</span>,         <span class="com"># auto-select via BIC</span>
+    maxlags   <span class="op">=</span> <span class="num">6</span>,
+    method    <span class="op">=</span> <span class="str">'twostep'</span>,   <span class="com"># 'twostep' or 'onestep'</span>
+    step1     <span class="op">=</span> <span class="str">'fmols'</span>,     <span class="com"># FM-OLS long-run estimator</span>
+    case      <span class="op">=</span> <span class="num">3</span>,            <span class="com"># PSS case III (unrestricted intercept)</span>
+    ic        <span class="op">=</span> <span class="str">'bic'</span>,
+)
+
+res <span class="op">=</span> model.fit()
+<span class="func">print</span>(res.summary())   <span class="com"># publication-quality table</span>
+</code></pre>
+        </div>
+        <div class="code-panel" id="tab-bounds">
+<pre><code><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> bounds_test
+
+<span class="com"># PSS (2001) bounds test for cointegration</span>
+bt <span class="op">=</span> bounds_test(res, sig_levels<span class="op">=</span>[<span class="num">0.10</span>, <span class="num">0.05</span>, <span class="num">0.01</span>])
+
+<span class="com"># Output:</span>
+<span class="com"># ========================================</span>
+<span class="com">#   Pesaran, Shin and Smith (2001) Bounds Test</span>
+<span class="com"># ========================================</span>
+<span class="com">#   F-statistic (PSS)   =      24.3108</span>
+<span class="com">#   t-statistic (BDM)   =     -10.0842</span>
+<span class="com">#   Case  = 3   k  = 1</span>
+<span class="com">#</span>
+<span class="com">#   Level   F decision   t decision   Overall</span>
+<span class="com">#     10%   REJECT       REJECT       REJECT</span>
+<span class="com">#      5%   REJECT       REJECT       REJECT</span>
+<span class="com">#      1%   REJECT       REJECT       REJECT</span>
+
+<span class="com"># Access CV table programmatically</span>
+<span class="kw">from</span> twostep_nardl <span class="kw">import</span> pss_cv_table
+df_cv <span class="op">=</span> pss_cv_table(case<span class="op">=</span><span class="num">3</span>, stat<span class="op">=</span><span class="str">'F'</span>)
+</code></pre>
+        </div>
+        <div class="code-panel" id="tab-mult">
+<pre><code><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> multipliers
+<span class="kw">from</span> twostep_nardl.plotting      <span class="kw">import</span> plot_multipliers
+
+<span class="com"># Compute cumulative dynamic multipliers (48 horizons)</span>
+mult <span class="op">=</span> multipliers(res, horizon<span class="op">=</span><span class="num">48</span>)
+
+<span class="com"># mult is a DataFrame with columns: pos, neg, diff</span>
+<span class="func">print</span>(mult.head(<span class="num">10</span>))
+
+<span class="com"># Publication-quality plot</span>
+plot_multipliers(res, horizon<span class="op">=</span><span class="num">48</span>)
+
+<span class="com"># Half-life and persistence profile</span>
+<span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> half_life
+hl <span class="op">=</span> half_life(res, horizon<span class="op">=</span><span class="num">72</span>)
+<span class="func">print</span>(<span class="str">f"Half-life: {hl['half_life']:.1f} periods"</span>)
+</code></pre>
+        </div>
+        <div class="code-panel" id="tab-diag">
+<pre><code><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> (
+    diagnostics, wald_test, ecm_table
+)
+
+<span class="com"># Residual diagnostics (BG, White, JB, RESET)</span>
+diag <span class="op">=</span> diagnostics(res)
+
+<span class="com"># Wald tests for asymmetry</span>
+wt <span class="op">=</span> wald_test(res)
+
+<span class="com"># Publication-style ECM table (CGS 2019 format)</span>
+ecm_table(res)
+
+<span class="com"># CUSUM stability test plot</span>
+<span class="kw">from</span> twostep_nardl.plotting <span class="kw">import</span> plot_cusum
+plot_cusum(res)
+
+<span class="com"># Impulse response functions</span>
+<span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> irf
+irf_df <span class="op">=</span> irf(res, horizon<span class="op">=</span><span class="num">36</span>)
+</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="cta-row">
+      <a href="quickstart.html" class="btn-primary">Full Quick Start Guide →</a>
+      <a href="api.html" class="btn-secondary">API Reference</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FIGURE GALLERY ═══════════════════ -->
+<section class="section gallery-section" id="gallery">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Output Gallery</div>
+      <h2 class="section-title">Publication-quality outputs</h2>
+      <p class="section-subtitle">All figures generated from the Oil → CPI example notebook.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item" data-title="Raw Data: Log CPI &amp; WTI Oil Price">
+        <img src="figures/fig1_raw_data.png" alt="Raw data plots" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Raw Data &amp; First Differences</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Partial Sum Decomposition of Log WTI">
+        <img src="figures/fig2_decomposition.png" alt="Partial sum decomposition" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Partial Sum Decomposition</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="PSS Bounds Test — F-Statistic vs CVs">
+        <img src="figures/fig3_bounds_test.png" alt="Bounds test" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>PSS Bounds Test</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Wald Asymmetry Tests">
+        <img src="figures/fig4_wald_tests.png" alt="Wald tests" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Wald Asymmetry Tests</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Long-Run Elasticities (FM-OLS)">
+        <img src="figures/fig5_lr_coefficients.png" alt="Long-run coefficients" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Long-Run Elasticities</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Cumulative Dynamic Multipliers">
+        <img src="figures/fig6_multipliers.png" alt="Dynamic multipliers" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Cumulative Dynamic Multipliers</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Half-Life &amp; Persistence Profile">
+        <img src="figures/fig7_halflife.png" alt="Half-life and persistence" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Half-Life &amp; Persistence</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Impulse Response Functions">
+        <img src="figures/fig8_irf.png" alt="Impulse response functions" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Impulse Response Functions</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Residual Diagnostics">
+        <img src="figures/fig9_diagnostics.png" alt="Residual diagnostics" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Residual Diagnostics</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="CUSUM Structural Stability">
+        <img src="figures/fig10_cusum.png" alt="CUSUM stability test" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>CUSUM Stability Test</span>
+        </div>
+      </div>
+      <div class="gallery-item" data-title="Model Comparison: Two-Step vs One-Step">
+        <img src="figures/fig11_comparison.png" alt="Model comparison" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>Two-Step vs One-Step</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">×</button>
+  <div class="lightbox-content">
+    <img id="lightboxImg" src="" alt=""/>
+    <p id="lightboxCaption"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODEL SUMMARY TABLE ═══════════════════ -->
+<section class="section methods-section" id="methods">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Methods</div>
+      <h2 class="section-title">Econometric framework</h2>
+    </div>
+    <div class="methods-grid">
+      <div class="method-block">
+        <h3>Step 1 — Long-Run (FM-OLS)</h3>
+        <div class="eq-box">
+          <p class="eq">ln CPI<sub>t</sub> = α + β<sup>+</sup> X<sub>t</sub><sup>+</sup> + β<sup>−</sup> X<sub>t</sub><sup>−</sup> + u<sub>t</sub></p>
+          <p class="eq-note">where X<sub>t</sub><sup>+</sup> = Σ max(ΔX<sub>s</sub>, 0) and X<sub>t</sub><sup>−</sup> = Σ min(ΔX<sub>s</sub>, 0) are the partial sum processes</p>
+        </div>
+        <ul class="method-list">
+          <li>FM-OLS removes endogeneity bias and serial correlation via non-parametric correction (Andrews-Monahan kernel)</li>
+          <li>FM-TOLS used for multiple asymmetric regressors (k &gt; 1)</li>
+          <li>OLS option available for comparison</li>
+        </ul>
+      </div>
+      <div class="method-block">
+        <h3>Step 2 — Short-Run ECM (OLS)</h3>
+        <div class="eq-box">
+          <p class="eq">Δln CPI<sub>t</sub> = ρ û<sub>t−1</sub> + Σ φ<sub>j</sub> Δln CPI<sub>t−j</sub> + Σ (π<sub>j</sub><sup>+</sup> ΔX<sub>t−j</sub><sup>+</sup> + π<sub>j</sub><sup>−</sup> ΔX<sub>t−j</sub><sup>−</sup>) + ε<sub>t</sub></p>
+          <p class="eq-note">ρ = speed of adjustment (BDM t-test on û<sub>t−1</sub>), PSS F-test on level vars</p>
+        </div>
+        <ul class="method-list">
+          <li>Lag structure selected by AIC or BIC grid search</li>
+          <li>HC-robust variance-covariance matrix for all SR parameters</li>
+          <li>Newey-West HAC bandwidth: floor(T<sup>0.25</sup>) by default</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ REFERENCES ═══════════════════ -->
+<section class="section refs-section" id="refs">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Literature</div>
+      <h2 class="section-title">Key references</h2>
+    </div>
+    <div class="refs-list">
+      <div class="ref-card">
+        <div class="ref-year">2019</div>
+        <div class="ref-body">
+          <strong>Cho, J.S., Greenwood-Nimmo, M. &amp; Shin, Y.</strong>
+          <p>Two-step estimation of the nonlinear autoregressive distributed lag model. <em>Working Paper.</em></p>
+          <span class="ref-tag">Core method</span>
+        </div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-year">2014</div>
+        <div class="ref-body">
+          <strong>Shin, Y., Yu, B. &amp; Greenwood-Nimmo, M.</strong>
+          <p>Modelling asymmetric cointegration and dynamic multipliers in a nonlinear ARDL framework. <em>Festschrift in Honor of Peter Schmidt, Springer.</em></p>
+          <span class="ref-tag">One-step NARDL</span>
+        </div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-year">2001</div>
+        <div class="ref-body">
+          <strong>Pesaran, M.H., Shin, Y. &amp; Smith, R.J.</strong>
+          <p>Bounds testing approaches to the analysis of level relationships. <em>Journal of Applied Econometrics, 16(3), 289–326.</em></p>
+          <span class="ref-tag">Bounds test</span>
+        </div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-year">2020</div>
+        <div class="ref-body">
+          <strong>Kripfganz, S. &amp; Schneider, D.C.</strong>
+          <p>Response surface regressions for critical value bounds. <em>Oxford Bulletin of Economics and Statistics, 82(6), 1456–1481.</em></p>
+          <span class="ref-tag">Critical values</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section class="section cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <h2>Ready to estimate NARDL?</h2>
+      <p>Install in seconds and run the full oil price example.</p>
+      <div class="cta-actions">
+        <a href="quickstart.html" class="btn-primary">Get Started →</a>
+        <a href="https://github.com/merwanroudane/2stepnardl" target="_blank" class="btn-ghost">⭐ Star on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <span class="brand-icon">⟮N⟯</span>
+          <span>twostep-nardl</span>
+        </a>
+        <p>Two-Step Nonlinear ARDL estimation for Python. MIT Licensed.</p>
+        <p>Author: <a href="mailto:merwanroudane920@gmail.com">Merwan Roudane</a></p>
+      </div>
+      <div class="footer-links">
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="api.html">API Reference</a></li>
+          <li><a href="example.html">Full Example</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="https://pypi.org/project/twostep-nardl/" target="_blank">PyPI</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl" target="_blank">GitHub</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl/issues" target="_blank">Issues</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl/blob/main/LICENSE" target="_blank">License (MIT)</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024–2026 Merwan Roudane · MIT License</span>
+      <span>twostep-nardl v3.0.0</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+</body>
+</html>

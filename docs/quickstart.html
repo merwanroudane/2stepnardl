@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quick Start — twostep-nardl</title>
+  <meta name="description" content="Learn how to install and use twostep-nardl in minutes. Step-by-step tutorial from data to publication-quality NARDL results."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quickstart.html" class="active">Quick Start</a></li>
+      <li><a href="api.html">API</a></li>
+      <li><a href="example.html">Example</a></li>
+      <li><a href="changelog.html">Changelog</a></li>
+      <li><a href="https://pypi.org/project/twostep-nardl/" class="btn-pypi" target="_blank">PyPI</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </div>
+</nav>
+
+<div style="height:var(--nav-h)"></div>
+
+<section class="section" style="padding-top:64px">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Quick Start</div>
+      <h1 class="section-title">From install to results in minutes</h1>
+      <p class="section-subtitle">Follow these steps to run your first Two-Step NARDL estimation using the oil price → CPI example.</p>
+    </div>
+
+    <div class="qs-steps">
+
+      <!-- STEP 1 -->
+      <div class="qs-step">
+        <div class="qs-num">1</div>
+        <div class="qs-body">
+          <h3>Install the package</h3>
+          <p>Install <strong>twostep-nardl</strong> from PyPI. Python 3.9+ required.</p>
+          <pre><code>pip install twostep-nardl</code></pre>
+          <p>For the data-download example, also install:</p>
+          <pre><code>pip install pandas-datareader yfinance</code></pre>
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <span>Dependencies (<code>numpy</code>, <code>pandas</code>, <code>scipy</code>, <code>statsmodels</code>, <code>matplotlib</code>) are installed automatically.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="qs-step">
+        <div class="qs-num">2</div>
+        <div class="qs-body">
+          <h3>Load your data</h3>
+          <p>Provide a <code>pd.DataFrame</code> with a time index. The example uses monthly WTI crude oil prices and US CPI from FRED (1990–2024).</p>
+          <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> pandas_datareader.data <span class="kw">as</span> web
+
+START, END <span class="op">=</span> <span class="str">'1990-01-01'</span>, <span class="str">'2024-06-01'</span>
+cpi   <span class="op">=</span> web.DataReader(<span class="str">'CPIAUCSL'</span>, <span class="str">'fred'</span>, START, END)
+oil_d <span class="op">=</span> web.DataReader(<span class="str">'DCOILWTICO'</span>, <span class="str">'fred'</span>, START, END)
+oil   <span class="op">=</span> oil_d.resample(<span class="str">'MS'</span>).mean()
+
+df_raw <span class="op">=</span> pd.concat([cpi.rename(columns<span class="op">=</span>{<span class="str">'CPIAUCSL'</span>:<span class="str">'cpi'</span>}),
+                    oil.rename(columns<span class="op">=</span>{<span class="str">'DCOILWTICO'</span>:<span class="str">'oil'</span>})], axis<span class="op">=</span><span class="num">1</span>).dropna()
+
+df <span class="op">=</span> pd.DataFrame(index<span class="op">=</span>df_raw.index)
+df[<span class="str">'lcpi'</span>] <span class="op">=</span> np.log(df_raw[<span class="str">'cpi'</span>])
+df[<span class="str">'loil'</span>] <span class="op">=</span> np.log(df_raw[<span class="str">'oil'</span>])
+df <span class="op">=</span> df.dropna()
+<span class="func">print</span>(df.tail())</pre>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="qs-step">
+        <div class="qs-num">3</div>
+        <div class="qs-body">
+          <h3>Estimate the Two-Step NARDL</h3>
+          <p>Initialise <code>TwoStepNARDL</code> and call <code>.fit()</code>. Set <code>lags=None</code> for automatic BIC lag selection.</p>
+          <pre><span class="kw">from</span> twostep_nardl <span class="kw">import</span> TwoStepNARDL
+
+model <span class="op">=</span> TwoStepNARDL(
+    data      <span class="op">=</span> df,
+    depvar    <span class="op">=</span> <span class="str">'lcpi'</span>,
+    xvars     <span class="op">=</span> [<span class="str">'loil'</span>],
+    decompose <span class="op">=</span> [<span class="str">'loil'</span>],   <span class="com"># partial-sum decomposition</span>
+    lags      <span class="op">=</span> <span class="kw">None</span>,         <span class="com"># BIC auto-selection</span>
+    maxlags   <span class="op">=</span> <span class="num">6</span>,
+    method    <span class="op">=</span> <span class="str">'twostep'</span>,   <span class="com"># two-step FM-OLS</span>
+    step1     <span class="op">=</span> <span class="str">'fmols'</span>,
+    case      <span class="op">=</span> <span class="num">3</span>,            <span class="com"># PSS Case III</span>
+    ic        <span class="op">=</span> <span class="str">'bic'</span>,
+)
+res <span class="op">=</span> model.fit()
+<span class="func">print</span>(res.summary())</pre>
+          <div class="alert alert-tip">
+            <span class="alert-icon">💡</span>
+            <span>Use <code>method='onestep'</code> to switch to the single-equation OLS approach (Shin, Yu &amp; Greenwood-Nimmo 2014).</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="qs-step">
+        <div class="qs-num">4</div>
+        <div class="qs-body">
+          <h3>Run the PSS bounds test</h3>
+          <p>Test for cointegration using the Pesaran, Shin &amp; Smith (2001) bounds procedure.</p>
+          <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> bounds_test
+
+bt <span class="op">=</span> bounds_test(res, sig_levels<span class="op">=</span>[<span class="num">0.10</span>, <span class="num">0.05</span>, <span class="num">0.01</span>])
+
+<span class="com"># Access decisions programmatically:</span>
+<span class="func">print</span>(bt[<span class="str">'decisions'</span>][<span class="num">0.05</span>])   <span class="com"># 'reject' or 'no decision'</span>
+<span class="func">print</span>(<span class="str">f"F = {bt['F_pss']:.3f},  t = {bt['t_bdm']:.3f}"</span>)</pre>
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="qs-step">
+        <div class="qs-num">5</div>
+        <div class="qs-body">
+          <h3>Test for asymmetry (Wald tests)</h3>
+          <p>Test whether the long-run and short-run responses are asymmetric.</p>
+          <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> wald_test
+
+wt <span class="op">=</span> wald_test(res)
+
+<span class="com"># Direct access to stored attributes:</span>
+<span class="func">print</span>(<span class="str">f"W_LR = {res.W_lr:.3f} (p = {res.p_lr:.4f})"</span>)
+<span class="func">print</span>(<span class="str">f"W_SR = {res.W_sr:.3f} (p = {res.p_sr:.4f})"</span>)</pre>
+        </div>
+      </div>
+
+      <!-- STEP 6 -->
+      <div class="qs-step">
+        <div class="qs-num">6</div>
+        <div class="qs-body">
+          <h3>Compute dynamic multipliers</h3>
+          <p>Compute and plot cumulative dynamic multipliers for positive and negative shocks.</p>
+          <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> multipliers
+<span class="kw">from</span> twostep_nardl.plotting      <span class="kw">import</span> plot_multipliers
+
+mult <span class="op">=</span> multipliers(res, horizon<span class="op">=</span><span class="num">48</span>)  <span class="com"># 4-year horizon</span>
+plot_multipliers(res, horizon<span class="op">=</span><span class="num">48</span>)
+
+<span class="com"># Half-life of adjustment</span>
+<span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> half_life
+hl <span class="op">=</span> half_life(res, horizon<span class="op">=</span><span class="num">72</span>)
+<span class="func">print</span>(<span class="str">f"Half-life: {hl['half_life']:.1f} months"</span>)</pre>
+        </div>
+      </div>
+
+      <!-- STEP 7 -->
+      <div class="qs-step">
+        <div class="qs-num">7</div>
+        <div class="qs-body">
+          <h3>Run residual diagnostics</h3>
+          <p>Check serial correlation, heteroskedasticity, normality, and functional form.</p>
+          <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> diagnostics
+diag <span class="op">=</span> diagnostics(res)
+
+<span class="com"># CUSUM structural stability</span>
+<span class="kw">from</span> twostep_nardl.plotting <span class="kw">import</span> plot_cusum
+plot_cusum(res)
+
+<span class="com"># Publication-style ECM table</span>
+<span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> ecm_table
+ecm_table(res)</pre>
+        </div>
+      </div>
+
+      <!-- STEP 8 -->
+      <div class="qs-step">
+        <div class="qs-num">8</div>
+        <div class="qs-body">
+          <h3>Access results attributes</h3>
+          <p>All estimates are stored as attributes of the <code>NARDLResults</code> object.</p>
+          <pre><span class="com"># Long-run estimates</span>
+<span class="func">print</span>(<span class="str">f"β+ = {float(res.b_lr[0]):.4f}"</span>)
+<span class="func">print</span>(<span class="str">f"β- = {float(res.b_lr[1]):.4f}"</span>)
+<span class="func">print</span>(<span class="str">f"ρ  = {res.rho:.4f}"</span>)
+
+<span class="com"># As a pandas Series</span>
+<span class="func">print</span>(res.coef)
+<span class="func">print</span>(res.pvalues)
+
+<span class="com"># ECT series (for custom analysis)</span>
+ect <span class="op">=</span> res.ect_series</pre>
+          <div class="alert alert-info">
+            <span class="alert-icon">📚</span>
+            <span>See the full <a href="api.html">API Reference</a> for all attributes and post-estimation functions, and the <a href="example.html">Example</a> page for the complete oil price walkthrough.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+        <p>Two-Step Nonlinear ARDL estimation for Python. MIT Licensed.</p>
+        <p>Author: <a href="mailto:merwanroudane920@gmail.com">Merwan Roudane</a></p>
+      </div>
+      <div class="footer-links">
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="api.html">API Reference</a></li>
+          <li><a href="example.html">Full Example</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="https://pypi.org/project/twostep-nardl/" target="_blank">PyPI</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024–2026 Merwan Roudane · MIT License</span>
+      <span>twostep-nardl v3.0.0</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+</body>
+</html>

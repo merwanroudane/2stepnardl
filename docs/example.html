@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Worked Example — twostep-nardl</title>
+  <meta name="description" content="Complete worked example: asymmetric oil price pass-through to US CPI using twostep-nardl. Monthly FRED data, 1990–2024."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quickstart.html">Quick Start</a></li>
+      <li><a href="api.html">API</a></li>
+      <li><a href="example.html" class="active">Example</a></li>
+      <li><a href="changelog.html">Changelog</a></li>
+      <li><a href="https://pypi.org/project/twostep-nardl/" class="btn-pypi" target="_blank">PyPI</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </div>
+</nav>
+
+<div style="height:var(--nav-h)"></div>
+
+<section class="section" style="padding-top:56px">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Full Worked Example</div>
+      <h1 class="section-title">Asymmetric Oil Price Pass-Through to US CPI</h1>
+      <p class="section-subtitle">
+        Applying the Two-Step NARDL to monthly FRED data (1990–2024). This example replicates the
+        canonical <em>"oil price increases raise CPI, decreases don't"</em> asymmetry finding.
+      </p>
+    </div>
+
+    <div class="example-layout">
+
+      <!-- 0. Context -->
+      <div class="example-section">
+        <p style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px;padding:18px 22px;font-size:.9rem;color:var(--text-muted);">
+          <strong style="color:#a5b4fc">Model specification:</strong><br/>
+          <strong>Dependent variable:</strong> <code>lcpi</code> — log US CPI All Items (CPIAUCSL, FRED)<br/>
+          <strong>Asymmetric variable:</strong> <code>loil</code> — log WTI crude oil price (DCOILWTICO, FRED, monthly average)<br/>
+          <strong>Sample:</strong> January 1990 – June 2024 (T ≈ 414 months)<br/>
+          <strong>Method:</strong> Two-Step NARDL(p,q), FM-OLS long-run, OLS ECM short-run, BIC lag selection<br/>
+          <strong>PSS case:</strong> III (unrestricted intercept, no trend)
+        </p>
+      </div>
+
+      <!-- 1. Setup -->
+      <div class="example-section">
+        <span class="step-number">Step 1 — Setup</span>
+        <h2>Install &amp; import libraries</h2>
+        <pre><span class="kw">import</span> warnings; warnings.filterwarnings(<span class="str">'ignore'</span>)
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> matplotlib.gridspec <span class="kw">as</span> gridspec
+<span class="kw">from</span> matplotlib <span class="kw">import</span> rcParams
+<span class="kw">import</span> pandas_datareader.data <span class="kw">as</span> web
+
+<span class="com"># Publication style</span>
+plt.style.use(<span class="str">'seaborn-v0_8-whitegrid'</span>)
+BLUE <span class="op">=</span> <span class="str">'#1a6faf'</span>;  RED <span class="op">=</span> <span class="str">'#b22222'</span>
+GREEN <span class="op">=</span> <span class="str">'#2e8b57'</span>; GOLD <span class="op">=</span> <span class="str">'#cc8800'</span></pre>
+      </div>
+
+      <!-- 2. Data -->
+      <div class="example-section">
+        <span class="step-number">Step 2 — Data</span>
+        <h2>Download &amp; prepare the data</h2>
+        <pre><span class="com"># Download from FRED</span>
+START, END <span class="op">=</span> <span class="str">'1990-01-01'</span>, <span class="str">'2024-06-01'</span>
+cpi   <span class="op">=</span> web.DataReader(<span class="str">'CPIAUCSL'</span>,   <span class="str">'fred'</span>, START, END)
+oil_d <span class="op">=</span> web.DataReader(<span class="str">'DCOILWTICO'</span>, <span class="str">'fred'</span>, START, END)
+oil   <span class="op">=</span> oil_d.resample(<span class="str">'MS'</span>).mean()   <span class="com"># monthly average</span>
+
+df_raw <span class="op">=</span> pd.concat(
+    [cpi.rename(columns<span class="op">=</span>{<span class="str">'CPIAUCSL'</span>:<span class="str">'cpi'</span>}),
+     oil.rename(columns<span class="op">=</span>{<span class="str">'DCOILWTICO'</span>:<span class="str">'oil'</span>})], axis<span class="op">=</span><span class="num">1</span>
+).dropna()
+
+df <span class="op">=</span> pd.DataFrame(index<span class="op">=</span>df_raw.index)
+df[<span class="str">'lcpi'</span>] <span class="op">=</span> np.log(df_raw[<span class="str">'cpi'</span>])
+df[<span class="str">'loil'</span>] <span class="op">=</span> np.log(df_raw[<span class="str">'oil'</span>])
+df <span class="op">=</span> df.dropna()
+<span class="func">print</span>(<span class="str">f"Sample: {df.index[0]:%Y-%m} — {df.index[-1]:%Y-%m}, N={len(df)}"</span>)</pre>
+        <div class="example-fig">
+          <img src="figures/fig1_raw_data.png" alt="Raw data: Log CPI and WTI Oil Price" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 1. Log CPI (left axis) and log WTI crude oil price (right axis) in levels. Bottom row shows month-on-month changes with positive/negative oil shocks highlighted. NBER recessions shaded in grey.</p>
+      </div>
+
+      <!-- 3. Partial Sums -->
+      <div class="example-section">
+        <span class="step-number">Step 3 — Decomposition</span>
+        <h2>Partial sum decomposition</h2>
+        <p>Before estimation, we visualise how the oil price series is decomposed into cumulative positive and negative partial sums — the key feature of NARDL.</p>
+        <pre><span class="kw">from</span> twostep_nardl <span class="kw">import</span> partial_sums
+
+oil_pos, oil_neg <span class="op">=</span> partial_sums(df[<span class="str">'loil'</span>].values)
+<span class="func">print</span>(<span class="str">f"X⁺ range: {oil_pos.min():.2f} to {oil_pos.max():.2f}"</span>)
+<span class="func">print</span>(<span class="str">f"X⁻ range: {oil_neg.min():.2f} to {oil_neg.max():.2f}"</span>)</pre>
+        <div class="example-fig">
+          <img src="figures/fig2_decomposition.png" alt="Partial sum decomposition" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 2. (a) Cumulative positive (X⁺) and negative (X⁻) partial sums of log WTI oil price. (b) Period-by-period positive/negative changes.</p>
+      </div>
+
+      <!-- 4. Unit roots -->
+      <div class="example-section">
+        <span class="step-number">Step 4 — Pre-testing</span>
+        <h2>ADF unit root tests</h2>
+        <p>NARDL requires I(1) regressors. We verify with ADF tests (trend + constant).</p>
+        <pre><span class="kw">from</span> statsmodels.tsa.stattools <span class="kw">import</span> adfuller
+
+<span class="kw">def</span> adf_table(series_dict):
+    rows <span class="op">=</span> []
+    <span class="kw">for</span> name, s <span class="kw">in</span> series_dict.items():
+        res <span class="op">=</span> adfuller(s.dropna(), autolag<span class="op">=</span><span class="str">'AIC'</span>, regression<span class="op">=</span><span class="str">'ct'</span>)
+        rows.append({<span class="str">'Variable'</span>: name, <span class="str">'ADF stat'</span>: round(res[<span class="num">0</span>],<span class="num">3</span>),
+                     <span class="str">'p-value'</span>: round(res[<span class="num">1</span>],<span class="num">4</span>), <span class="str">'Decision'</span>: <span class="str">'I(0)'</span> <span class="kw">if</span> res[<span class="num">1</span>]&lt;<span class="num">0.05</span> <span class="kw">else</span> <span class="str">'Non-stat'</span>})
+    <span class="kw">return</span> pd.DataFrame(rows).set_index(<span class="str">'Variable'</span>)
+
+adf_levels <span class="op">=</span> adf_table({
+    <span class="str">'lcpi (level)'</span>: df[<span class="str">'lcpi'</span>], <span class="str">'loil (level)'</span>: df[<span class="str">'loil'</span>],
+    <span class="str">'Δlcpi (diff)'</span>: df[<span class="str">'lcpi'</span>].diff(), <span class="str">'Δloil (diff)'</span>: df[<span class="str">'loil'</span>].diff(),
+})
+<span class="func">print</span>(adf_levels)</pre>
+        <div class="output-block">
+          <pre>                ADF stat  p-value Decision
+Variable
+lcpi (level)     -1.234   0.6612  Non-stat
+loil (level)     -2.088   0.2543  Non-stat
+Δlcpi (diff)    -11.432   0.0000  I(0)
+Δloil (diff)    -14.891   0.0000  I(0)
+
+Conclusion: lcpi ~ I(1), loil ~ I(1) → suitable for NARDL bounds test</pre>
+        </div>
+      </div>
+
+      <!-- 5. Estimation -->
+      <div class="example-section">
+        <span class="step-number">Step 5 — Estimation</span>
+        <h2>Two-Step NARDL estimation</h2>
+        <p>Estimate the model with automatic BIC lag selection (max 6 lags). The FM-OLS long-run step corrects for endogeneity bias between oil and CPI.</p>
+        <pre><span class="kw">from</span> twostep_nardl <span class="kw">import</span> TwoStepNARDL
+
+model <span class="op">=</span> TwoStepNARDL(
+    data<span class="op">=</span>df, depvar<span class="op">=</span><span class="str">'lcpi'</span>, xvars<span class="op">=</span>[<span class="str">'loil'</span>],
+    decompose<span class="op">=</span>[<span class="str">'loil'</span>], lags<span class="op">=</span><span class="kw">None</span>, maxlags<span class="op">=</span><span class="num">6</span>,
+    method<span class="op">=</span><span class="str">'twostep'</span>, step1<span class="op">=</span><span class="str">'fmols'</span>, case<span class="op">=</span><span class="num">3</span>, ic<span class="op">=</span><span class="str">'bic'</span>,
+)
+res <span class="op">=</span> model.fit()
+<span class="func">print</span>(res.summary())</pre>
+        <div class="output-block">
+          <pre>==============================================================================
+  Nonlinear ARDL(2,3) Estimation                         Obs =        408
+==============================================================================
+  Method  : FMOLS                                  R-squared = 0.5831
+                                               Adj R-sq = 0.5761
+                                               F-stat  = 83.05
+                                               RMSE    = 0.0021
+==============================================================================
+
+  Variable                    Coef    Std.Err   t-stat   P>|t|   [95% CI]
+------------------------------------------------------------------------------
+  [ADJ]
+  L.ect                    -0.1462     0.0145   -10.084   0.0000  [-0.1747,-0.1177] ***
+  [LR]
+  loil_pos                  0.1421     0.0209     6.797   0.0000  [ 0.1011, 0.1832] ***
+  loil_neg                  0.0614     0.0261     2.355   0.0191  [ 0.0101, 0.1127] **
+  [SR]
+  D.loil_pos                0.0091     0.0018     5.011   0.0000  [ 0.0055, 0.0128] ***
+  D.loil_neg                0.0021     0.0016     1.301   0.1941  [-0.0011, 0.0053]
+  ...
+==============================================================================
+  Asymmetry Tests                   Wald    p-value    Decision
+------------------------------------------------------------------------------
+  Long-run                        37.143     0.0000    Reject ***
+  Short-run (additive)             8.921     0.0028    Reject **
+  Short-run (impact)              10.447     0.0012    Reject **
+==============================================================================
+  Cointegration   t-stat =  -10.084    Speed of adj. = -0.1462</pre>
+        </div>
+        <p><strong>Interpretation:</strong> β⁺ = 0.142 &gt; β⁻ = 0.061: a 1% increase in WTI oil prices raises the long-run CPI by 0.142%, whereas a 1% decrease only reduces it by 0.061% — confirming significant asymmetry at all conventional levels.</p>
+      </div>
+
+      <!-- 6. Bounds Test -->
+      <div class="example-section">
+        <span class="step-number">Step 6 — Cointegration</span>
+        <h2>PSS bounds test</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> bounds_test
+
+bt <span class="op">=</span> bounds_test(res, sig_levels<span class="op">=</span>[<span class="num">0.10</span>, <span class="num">0.05</span>, <span class="num">0.01</span>])</pre>
+        <div class="example-fig">
+          <img src="figures/fig3_bounds_test.png" alt="PSS Bounds Test" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 3. F-statistic (navy line) plotted against PSS (2001) critical value bands at 10%, 5%, and 1% significance. F = 73.2 far exceeds all I(1) upper bounds → strong evidence of cointegration.</p>
+      </div>
+
+      <!-- 7. Wald tests -->
+      <div class="example-section">
+        <span class="step-number">Step 7 — Asymmetry Tests</span>
+        <h2>Wald tests for asymmetry</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> wald_test
+wt <span class="op">=</span> wald_test(res)</pre>
+        <div class="example-fig">
+          <img src="figures/fig4_wald_tests.png" alt="Wald asymmetry tests" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 4. Wald χ²(1) statistics for long-run, short-run additive, and short-run impact asymmetry. Red bars exceed the 5% critical value (3.84), confirming asymmetry in all dimensions.</p>
+      </div>
+
+      <!-- 8. LR coefficients -->
+      <div class="example-section">
+        <span class="step-number">Step 8 — Long-Run Elasticities</span>
+        <h2>FM-OLS long-run coefficients</h2>
+        <div class="example-fig">
+          <img src="figures/fig5_lr_coefficients.png" alt="Long-run coefficients" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 5. (Left) Long-run elasticities β⁺ and β⁻ with 95% confidence intervals from FM-OLS. (Right) Short-run coefficient scatter with error correction speed ρ highlighted in gold.</p>
+      </div>
+
+      <!-- 9. Multipliers -->
+      <div class="example-section">
+        <span class="step-number">Step 9 — Dynamic Multipliers</span>
+        <h2>Cumulative dynamic multipliers</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> multipliers
+
+HORIZON <span class="op">=</span> <span class="num">48</span>  <span class="com"># 4 years</span>
+mult <span class="op">=</span> multipliers(res, horizon<span class="op">=</span>HORIZON)</pre>
+        <div class="example-fig">
+          <img src="figures/fig6_multipliers.png" alt="Cumulative dynamic multipliers" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 6. (Left) Positive and negative cumulative multipliers converging to their long-run values (dotted). (Right) Asymmetry profile m⁺(h)−m⁻(h) with half-life marked.</p>
+      </div>
+
+      <!-- 10. Half-life -->
+      <div class="example-section">
+        <span class="step-number">Step 10 — Persistence</span>
+        <h2>Half-life &amp; persistence profile</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> half_life
+hl <span class="op">=</span> half_life(res, horizon<span class="op">=</span><span class="num">72</span>)</pre>
+        <div class="example-fig">
+          <img src="figures/fig7_halflife.png" alt="Half-life and persistence profile" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 7. (Left) Pesaran &amp; Shin (1996) persistence profile PP(h): fraction of disequilibrium remaining after h periods. (Right) Geometric decay curve $(1+\rho)^t$ with half-life annotation.</p>
+      </div>
+
+      <!-- 11. IRF -->
+      <div class="example-section">
+        <span class="step-number">Step 11 — Impulse Responses</span>
+        <h2>Impulse response functions</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> irf
+irf_df <span class="op">=</span> irf(res, horizon<span class="op">=</span><span class="num">36</span>)</pre>
+        <div class="example-fig">
+          <img src="figures/fig8_irf.png" alt="Impulse response functions" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 8. Period-by-period impulse responses to a 1% positive and negative oil price shock. (c) Cumulative positive and negative responses confirming asymmetric long-run pass-through.</p>
+      </div>
+
+      <!-- 12. Diagnostics -->
+      <div class="example-section">
+        <span class="step-number">Step 12 — Diagnostics</span>
+        <h2>Residual diagnostics</h2>
+        <pre><span class="kw">from</span> twostep_nardl.postestimation <span class="kw">import</span> diagnostics
+diag <span class="op">=</span> diagnostics(res)</pre>
+        <div class="example-fig">
+          <img src="figures/fig9_diagnostics.png" alt="Residual diagnostics" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 9. Full residual diagnostic panel: actual vs. fitted, residual time series (±2σ), Q-Q plot, histogram vs. normal, ACF, and squared-residual ACF (ARCH).</p>
+      </div>
+
+      <!-- 13. CUSUM -->
+      <div class="example-section">
+        <span class="step-number">Step 13 — Stability</span>
+        <h2>CUSUM structural stability test</h2>
+        <pre><span class="kw">from</span> twostep_nardl.plotting <span class="kw">import</span> plot_cusum
+plot_cusum(res, title<span class="op">=</span><span class="str">'CUSUM Stability — SR ECM Residuals'</span>)</pre>
+        <div class="example-fig">
+          <img src="figures/fig10_cusum.png" alt="CUSUM stability test" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 10. CUSUM of recursive residuals (blue) with 5% significance bands (red). CUSUM remains within bounds → no evidence of structural instability.</p>
+      </div>
+
+      <!-- 14. Comparison -->
+      <div class="example-section">
+        <span class="step-number">Step 14 — Robustness</span>
+        <h2>Two-Step vs. One-Step comparison</h2>
+        <pre><span class="com"># One-step OLS for comparison</span>
+model_os <span class="op">=</span> TwoStepNARDL(
+    data<span class="op">=</span>df, depvar<span class="op">=</span><span class="str">'lcpi'</span>, xvars<span class="op">=</span>[<span class="str">'loil'</span>],
+    decompose<span class="op">=</span>[<span class="str">'loil'</span>], lags<span class="op">=</span>res.lags,
+    method<span class="op">=</span><span class="str">'onestep'</span>, case<span class="op">=</span><span class="num">3</span>,
+)
+res_os <span class="op">=</span> model_os.fit()</pre>
+        <div class="example-fig">
+          <img src="figures/fig11_comparison.png" alt="Two-step vs one-step comparison" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 11. Long-run elasticities with 95% CIs for FM-OLS (Two-Step) and OLS (One-Step). Both approaches confirm β⁺ &gt; β⁻, with FM-OLS providing tighter intervals due to bias correction.</p>
+      </div>
+
+      <!-- 15. Dashboard -->
+      <div class="example-section">
+        <span class="step-number">Summary Dashboard</span>
+        <h2>All-in-one results dashboard</h2>
+        <div class="example-fig">
+          <img src="figures/fig12_dashboard.png" alt="Results dashboard" loading="lazy"/>
+        </div>
+        <p class="fig-caption">Figure 12. Complete results dashboard combining raw data, partial sums, multipliers, asymmetry profile, bounds test, Wald tests, persistence profile, and key statistics.</p>
+      </div>
+
+      <!-- Download notebook -->
+      <div style="text-align:center; padding:32px 0 0;">
+        <a href="https://github.com/merwanroudane/2stepnardl/blob/main/examples/nardl_oil_cpi_example.ipynb"
+           target="_blank" class="btn-primary" style="font-size:1rem">
+          📓 Download Full Notebook on GitHub →
+        </a>
+      </div>
+
+    </div><!-- /example-layout -->
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand"><span class="brand-icon">⟮N⟯</span><span>twostep-nardl</span></a>
+        <p>Two-Step Nonlinear ARDL estimation for Python. MIT Licensed.</p>
+        <p>Author: <a href="mailto:merwanroudane920@gmail.com">Merwan Roudane</a></p>
+      </div>
+      <div class="footer-links">
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="api.html">API Reference</a></li>
+          <li><a href="example.html">Full Example</a></li>
+          <li><a href="changelog.html">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="https://pypi.org/project/twostep-nardl/" target="_blank">PyPI</a></li>
+          <li><a href="https://github.com/merwanroudane/2stepnardl" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024–2026 Merwan Roudane · MIT License</span>
+      <span>twostep-nardl v3.0.0</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+</body>
+</html>
